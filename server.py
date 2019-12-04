@@ -4,6 +4,7 @@ from aeternity.contract_native import ContractNative
 from aeternity.signing import Account
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
+from flask_cors import CORS
 import os
 
 app = Flask(__name__)
@@ -41,8 +42,8 @@ signature_checker_instance = ContractNative(client=node_cli,
 # tx_validate_info, tx_validate_result = signature_checker_instance.validate_addresses(ae_address, signature,eth_address.upper())
 
 class getAddress(Resource):
-	def get(self):
-		return ae_address, 200
+	# def get(self):
+	# 	return ae_address, 200
 
 	def post(self):
 		parser = reqparse.RequestParser()
@@ -50,11 +51,18 @@ class getAddress(Resource):
 		parser.add_argument("signature")
 		parser.add_argument("eth_address")
 		args = parser.parse_args()
-		
+		print(f"patamsss {args}")
+		print(f"params {args['ae_address']}")
+		print(f"params {args['signature']}")
+		print(f"params {args['eth_address']}")
+		signature_checker_instance.at("ct_8n7ZdPSuhgp4hdcU49fy6d8UThqCv68C1cVQCVWw7biqrWcag")
 		tx_validate_info, tx_validate_result = signature_checker_instance.validate_addresses(args['ae_address'], args['signature'],args['eth_address'].upper())
+		# tx_validate_info, tx_validate_result = signature_checker_instance.validate_addresses(ae_address, signature,eth_address.upper())
+		print(f"REsult {tx_validate_result}")
 		return tx_validate_result, 200
 
 
 api.add_resource(getAddress, "/verifySignature")
-app.run(ssl_context=('./openssl/openssl/cert.pem', './openssl/openssl/key.pem'))
-
+# CORS(app)
+# app.run(ssl_context=('./openssl/openssl/cert.pem', './openssl/openssl/key.pem'))
+app.run()
