@@ -1,0 +1,31 @@
+
+contract SignatureChecker =
+
+    datatype event =
+        EthAddressResolved(string)
+        | AddressComparison(bool)
+
+    entrypoint get_eth_address_string(ae_address: address, sig:bytes(65)) : string =
+      
+        let ae_address_str = Address.to_str(ae_address)
+        let unhashed_msg = String.concat("\x19Ethereum Signed Message:\n", String.concat(Int.to_str(String.length(ae_address_str)), ae_address_str))
+        let hashed_msg = String.sha3(unhashed_msg)
+
+        let recovered_eth_address = get_signer(hashed_msg, sig)
+        let recovered_eth_address_string = switch (recovered_eth_address)
+                                            None => abort("Failed to recover address, bad signature")
+                                            Some(recovered) => String.concat("0X", Bytes.to_str(recovered))
+
+        Chain.event(EthAddressResolved(recovered_eth_address_string))
+        recovered_eth_address_string
+
+    
+    entrypoint validate_addresses(ae_address: address, sig: bytes(65), eth_address: string): bool =
+      
+        let recovered_eth_address_string = get_eth_address_string(ae_address,sig)
+
+        Chain.event(AddressComparison(recovered_eth_address_string == eth_address))
+        recovered_eth_address_string == eth_address
+
+    function get_signer(msg_hash: hash, sig: bytes(65)) =
+        Crypto.ecrecover_secp256k1(msg_hash, sig)
